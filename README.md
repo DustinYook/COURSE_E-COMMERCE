@@ -9,3 +9,79 @@
 
 ## 시뮬레이션 결과
 ![result](https://github.com/DustinYook/Java_TACSCM/blob/master/game_result.PNG)
+
+-----
+'''java
+
+ /** Called when a bundle of RFQs have been received from the customers. 
+  * In TAC03 SCM the customers only send one bundle per day and the same RFQs are sent to all manufacturers.
+  * @param rfqBundle a bundle of RFQs */
+  protected void handleCustomerRFQs(RFQBundle rfqBundle) 
+  {
+	  int currentDate = getCurrentDate(); 
+	  int offerQty = 0; // 받은 RFQ중 보낸 offer수를 세기 위한 변수
+	  
+	// 목적: 다른 Agent보다 많은 order를 따 내야 높은 수익 달성가능
+	  /** Discount Factor Control */	  
+	  if(transCnt >= 2) // 처음 offer와 order받는 것 2회 카운트가 필요
+	  {
+		// order 많으면 많은 주문 땀, offer 많으면 견적서 보냈으나 주문 못 땀
+		  hitRatio = orderLog[transCnt-1]/offerLog[transCnt-2]; // hitRatio에 따라 할인율 조정
+	
+		  // 주문성사율이 100%이면 우리는 아쉬울게 없으므로 비싸게 받음 
+	      if (hitRatio == 1.0) 
+	         priceDiscountFactor += 0.03;
+	      else
+	      {
+	         // 전략: 주문성사율이 높으면 할인율을 낮추고, 낮으면 할인율을 높이는 전략 -> 비율은 수능등급 이용
+	         if(hitRatio >= 0.96)
+	            priceDiscountFactor -= 0.001; // 1등급 컷
+	         else if(hitRatio >= 0.89)
+	            priceDiscountFactor -= 0.003; // 2등급 컷
+	         else if(hitRatio >= 0.77)
+	            priceDiscountFactor -= 0.010; // 3등급 컷
+	         else if(hitRatio >= 0.60)
+	            priceDiscountFactor -= 0.015; // 4등급 컷
+	         else if(hitRatio >= 0.40)
+	            priceDiscountFactor -= 0.017; // 5등급 컷
+	         else if(hitRatio >= 0.23)
+	            priceDiscountFactor -= 0.020; // 6등급 컷
+	         else if(hitRatio >= 0.11)
+	            priceDiscountFactor -= 0.025; // 7등급 컷
+	         else if(hitRatio >= 0.04)
+	            priceDiscountFactor -= 0.030; // 8등급 컷
+	         else
+	            priceDiscountFactor -= 0.050; // 9등급 컷
+	      }
+	  }
+	
+	  for (int i = 0, n = rfqBundle.size(); i < n; i++) 
+	  {
+		  basePrice = SKU_price[rfqBundle.getProductID(i)]; // 원가
+		  unitProdCycle = SKU_unitProdCycle[rfqBundle.getProductID(i)];
+			
+		  int dueDate = rfqBundle.getDueDate(i); // RFQ의 납기일 파악
+		  if ((dueDate - currentDate) >= 6 && (dueDate <= lastBidDueDate) && (totProdCycle <= 1990)) 
+		  { 
+			  int resPrice = rfqBundle.getReservePricePerUnit(i); // RFQ의 상한가 파악
+			  if (resPrice >= basePrice + selectFilter) // basePrice 가격 이상만 받는다.
+			  {
+				  int offeredPrice = (int)(resPrice * priceDiscountFactor);
+				  addCustomerOffer(rfqBundle, i, offeredPrice);
+				  totProdCycle += (rfqBundle.getQuantity(i) * unitProdCycle); //제품의 unitProdCycle을 totProdCycle에 더함
+				  offerQty += rfqBundle.getQuantity(i); //Offer를 보냄
+			  }
+		  }
+	  } offerLog[transCnt] = offerQty; // 보낸 offer의 수를 저장
+
+	  /** Controlling sending offer quantity according to factory utilization */
+	  if(totProdCycle <= 1800 && selectFilter > 10)
+		  selectFilter -= 10;
+	  else if(totProdCycle >= 1900) 
+		  selectFilter += 10;
+	  totProdCycle = 0;
+	  
+	  sendCustomerOffers();
+	  transCnt++; 
+  }
+'''
