@@ -11,9 +11,9 @@
 ![result](https://github.com/DustinYook/Java_TACSCM/blob/master/game_result.PNG)
 
 -----
-'''java
 
- /** Called when a bundle of RFQs have been received from the customers. 
+```java
+/** Called when a bundle of RFQs have been received from the customers. 
   * In TAC03 SCM the customers only send one bundle per day and the same RFQs are sent to all manufacturers.
   * @param rfqBundle a bundle of RFQs */
   protected void handleCustomerRFQs(RFQBundle rfqBundle) 
@@ -84,4 +84,4 @@
 	  sendCustomerOffers();
 	  transCnt++; 
   }
-'''
+```
