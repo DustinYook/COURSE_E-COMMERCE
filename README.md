@@ -12,6 +12,8 @@
 
 -----
 
+## 핵심코드 부분
+-----
 ```java
 /** Called when a bundle of RFQs have been received from the customers. 
   * In TAC03 SCM the customers only send one bundle per day and the same RFQs are sent to all manufacturers.
